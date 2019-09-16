@@ -1,4 +1,4 @@
----
+ ' ---
 title: "R Notebook"
 output:
   html_document: default
@@ -10,6 +10,11 @@ output:
 I have provided you with data about the 5,000 fastest growing companies in the US, as compiled by Inc. magazine. lets read this in:
 
 ```{r}
+library (funModeling); library (ggplot2); library(dplyr); library (tidyr) #load libraries
+```
+
+
+```{r}
 
 inc <- read.csv("https://raw.githubusercontent.com/charleyferrari/CUNY_DATA_608/master/module1/Data/inc5000_data.csv", header= TRUE)
 
@@ -19,20 +24,21 @@ And lets preview this data:
 
 ```{r}
 
-head(inc)
+head(inc) # view the data
 
 ```
 ```{r}
 
-summary(inc)
+summary(inc) # quick stats on variables
 
 ```
 
 Think a bit on what these summaries mean. Use the space below to add some more relevant non-visual exploratory information you think helps you understand this data:
 
+** I use the df_status function to view missing values, zero valyes and infinite numbers. This is important as we want to have a dataset with at least 80% non-NA values and any variables with less than 50 unique values.
 ```{r}
 
-# Insert your code here, create more chunks as necessary
+df_status(inc) # using funModeling package, view variable metrics such as zeros, missing values and infinite numbers
 
 ```
 
@@ -40,21 +46,56 @@ Think a bit on what these summaries mean. Use the space below to add some more r
 
 Create a graph that shows the distribution of companies in the dataset by State (ie how many are in each state). There are a lot of States, so consider which axis you should use. This visualization is ultimately going to be consumed on a 'portrait' oriented screen (ie taller than wide), which should further guide your layout choices.
 
+** For this problem, after counting up the companies in each state, we can see the top states with the most fastest growing companies: CA, TX and NY, with CA having almost 700 of them!
+
 ```{r}
 
-# Answer Question 1 here
+#count up companies by state
+data_1 <- inc %>% 
+  select (Name,State) %>% 
+  group_by(State) %>% 
+  summarise(count = n_distinct(Name))
 
+#plot graph to show amount of companies by state
+ggplot(data_1, aes(reorder(State,count),count) )+ geom_bar(stat="identity") + labs(title = "US Companies by State",x = "State", y = "Count") + theme(axis.text.x = element_text(size=6),
+          axis.text.y = element_text(size=6)) + coord_flip()
 ```
 
-## Quesiton 2
+## Question 2
 
 Lets dig in on the state with the 3rd most companies in the data set. Imagine you work for the state and are interested in how many people are employed by companies in different industries. Create a plot that shows the average and/or median employment by industry for companies in this state (only use cases with full data, use R's `complete.cases()` function.) In addition to this, your graph should show how variable the ranges are, and you should deal with outliers.
 
+** From the graph above, we can see NY is the third state that has the most fastest growing companies. We see that 
 ```{r}
 
-# Answer Question 2 here
+#filter data for state == NY only
+data_2<-inc %>% 
+  filter(State == "NY")
+
+#use complete cases only from new filtered data
+data_2 <- data_2[complete.cases(data_2$Industry), ]
+data_2 <- data_2[complete.cases(data_2$Employees), ]
+
+#mean employee by industry
+m <- aggregate(Employees ~ Industry, data_2, mean)
+
+#upper limit for graph
+max <- max(m$Employees)
+
+#plot graph with outliers
+ggplot(data_2, aes(reorder(Industry, Employees, mean), Employees))+ geom_boxplot()  + coord_flip() + labs(title="Mean Employee Size by Industries in NY",x = "Industry", y = "Employee Size") + scale_y_continuous(limits = c(0,max))
+```
+```{r}
+#lets remove the outliers 
+data_2_adj <- data_2 %>%
+  filter(Employees < 500)
+
+#graph w/ outliers removed
+ggplot(data_2_adj, aes(Industry, Employees)) + geom_boxplot(outlier.shape = NA) + coord_flip() + labs(title="Mean Employee Size by Industries in NY",x = "Industry", y = "Employee Mean Size") + scale_y_continuous(limits = c(0,500))
 
 ```
+
+** From the graph above, we can see environmental services and engineering have the highest employee mean.
 
 ## Question 3
 
@@ -62,7 +103,23 @@ Now imagine you work for an investor and want to see which industries generate t
 
 ```{r}
 
-# Answer Question 3 here
+#calculate the revenue per employee by industry
+data_3 <- inc %>% 
+  select (Revenue, Industry, Employees) %>% 
+  group_by(Industry) %>%
+  summarise(rev_total = sum(Revenue), empl_total = sum(Employees)) %>%
+  mutate(rev_empl = rev_total / empl_total) %>% 
+  arrange (rev_empl)
+
+#consider the complete cases only
+data_3 <- data_3[complete.cases(data_3$Industry), ]
+data_3 <- data_3[complete.cases(data_3$empl_total), ]
+
+#create bar plot with highest revenues at top
+ggplot(data_3, aes(reorder(Industry, rev_empl), rev_empl)) +
+  geom_bar(stat="identity")+
+  coord_flip() + 
+  labs(title = "Revenue Generated per Employee",x = "Industry", y = "Revenue per Employee") 
 
 ```
 
