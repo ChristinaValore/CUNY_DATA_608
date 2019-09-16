@@ -375,31 +375,7 @@ $(document).ready(function () {
 
 <p><strong>Principles of Data Visualization and Introduction to ggplot2</strong></p>
 <p>I have provided you with data about the 5,000 fastest growing companies in the US, as compiled by Inc. magazine. lets read this in:</p>
-<pre class="r"><code>library (funModeling); library (ggplot2); library(dplyr); library (tidyr) #load libraries</code></pre>
-<pre><code>## Loading required package: Hmisc</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: survival</code></pre>
-<pre><code>## Loading required package: Formula</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre><code>## 
-## Attaching package: 'Hmisc'</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     format.pval, units</code></pre>
-<pre><code>## funModeling v.1.9.2 :)
-## Examples and tutorials at livebook.datascienceheroes.com
-##  / Now in Spanish: librovivodecienciadedatos.ai</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following objects are masked from 'package:Hmisc':
-## 
-##     src, summarize</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>suppressMessages(library (funModeling)); suppressMessages(library (ggplot2)); suppressMessages(library(dplyr))  #load libraries</code></pre>
 <pre class="r"><code>inc &lt;- read.csv(&quot;https://raw.githubusercontent.com/charleyferrari/CUNY_DATA_608/master/module1/Data/inc5000_data.csv&quot;, header= TRUE)</code></pre>
 <p>And lets preview this data:</p>
 <pre class="r"><code>head(inc) # view the data</code></pre>
