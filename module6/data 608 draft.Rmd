@@ -1,0 +1,116 @@
+---
+title: "608 Draft"
+author: "Christina Valore"
+date: "11/24/2019"
+output: html_document
+---
+```{r message=FALSE, warning=TRUE}
+library(ggplot2);library(network);library(readr);library(tidyverse);library(tidygraph);library(ggraph)
+```
+
+```{r}
+data <- read.csv('https://raw.githubusercontent.com/ChristinaValore/CUNY_DATA_608/master/module6/Traffic_Volume_Counts__2014-2018_.csv', stringsAsFactors = FALSE)
+
+head(data)
+```
+
+```{r}
+
+From <- data %>%
+  distinct(From) %>%
+  rename(label = From)
+
+To <- data %>%
+  distinct(To) %>%
+  rename(label = To)
+```
+
+```{r}
+nodes <- full_join(From, To, by = "label")
+nodes
+```
+
+```{r}
+nodes <- nodes %>% rowid_to_column("id")
+nodes
+```
+
+```{r}
+per_route <- data %>%  
+  group_by(From, To) %>%
+  summarise(weight = n()) %>% 
+  ungroup()
+per_route
+```
+
+```{r}
+edges <- per_route %>% 
+  left_join(nodes, by = c("From" = "label")) %>% 
+  rename(from = id)
+
+edges <- edges %>% 
+  left_join(nodes, by = c("To" = "label")) %>% 
+  rename(to = id)
+```
+
+```{r}
+edges <- select(edges, from, to, weight)
+edges
+```
+
+```{r}
+routes_network <- network(edges, vertex.attr = nodes, matrix.type = "edgelist", ignore.eval = FALSE)
+```
+
+```{r}
+plot(routes_network, vertex.cex = .5)
+```
+
+```{r}
+detach(package:network)
+rm(routes_network)
+library(igraph)
+```
+
+```{r}
+routes_igraph <- graph_from_data_frame(d = edges, vertices = nodes, directed = TRUE)
+```
+
+```{r}
+plot(routes_igraph, edge.arrow.size = 0.1)
+```
+```{r}
+plot(routes_igraph, layout = layout_with_graphopt, edge.arrow.size = 0.1)
+```
+```{r}
+routes_tidy <- tbl_graph(nodes = nodes, edges = edges, directed = TRUE)
+routes_igraph_tidy <- as_tbl_graph(routes_igraph)
+```
+
+```{r}
+routes_tidy %>% 
+  activate(edges) %>% 
+  arrange(desc(weight))
+```
+```{r}
+ggraph(routes_tidy) + geom_edge_link() + geom_node_point() + theme_graph()
+```
+```{r}
+ggraph(routes_tidy, layout = "graphopt") + 
+  geom_node_point() +
+  geom_edge_link(aes(width = weight), alpha = 0.2) + 
+  scale_edge_width(range = c(0.2, 2)) +
+  geom_node_text(aes(label = label), repel = TRUE) +
+  labs(edge_width = "Count") +
+  theme_graph()
+```
+
+```{r}
+ggraph(routes_igraph, layout = "linear") + 
+  geom_edge_arc(aes(width = weight), alpha = 0.1) + 
+  scale_edge_width(range = c(0.2, 2)) +
+  geom_node_text(aes(label = label)) +
+  labs(edge_width = "Count") +
+  theme_graph()
+```
+
